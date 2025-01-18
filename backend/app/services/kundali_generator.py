@@ -1,0 +1,170 @@
+import swisseph as swe
+import matplotlib.pyplot as plt
+import numpy as np
+from typing import Dict, List, Tuple
+import math
+from datetime import datetime, timezone
+from app.models.schemas import BirthDetails
+
+class KundaliGenerator:
+    def __init__(self):
+        # Initialize Swiss Ephemeris
+        swe.set_ephe_path()
+        self.current_figure = None
+        
+        # Define planets and their symbols
+        self.planets = {
+            'Sun': '☉',
+            'Moon': '☽',
+            'Mars': '♂',
+            'Mercury': '☿',
+            'Jupiter': '♃',
+            'Venus': '♀',
+            'Saturn': '♄',
+            'Rahu': '☊',
+            'Ketu': '☋'
+        }
+        
+        # Define zodiac signs and their symbols
+        self.zodiac_signs = [
+            'Aries ♈', 'Taurus ♉', 'Gemini ♊', 'Cancer ♋',
+            'Leo ♌', 'Virgo ♍', 'Libra ♎', 'Scorpio ♏',
+            'Sagittarius ♐', 'Capricorn ♑', 'Aquarius ♒', 'Pisces ♓'
+        ]
+
+    def calculate_planet_positions(self, birth_details: BirthDetails) -> Dict[str, float]:
+        """Calculate positions of planets at time of birth"""
+        # Convert local time to UTC
+        local_datetime = datetime.combine(birth_details.date, birth_details.time)
+        utc_datetime = local_datetime.replace(tzinfo=timezone.utc)
+        julian_day = swe.julday(
+            birth_details.date.year,
+            birth_details.date.month,
+            birth_details.date.day,
+            birth_details.time.hour + birth_details.time.minute/60.0
+        )
+        
+        # Calculate positions for each planet
+        planet_positions = {}
+        
+        # Map of planets to their Swiss Ephemeris constants
+        planet_map = {
+            'Sun': swe.SUN,
+            'Moon': swe.MOON,
+            'Mars': swe.MARS,
+            'Mercury': swe.MERCURY,
+            'Jupiter': swe.JUPITER,
+            'Venus': swe.VENUS,
+            'Saturn': swe.SATURN,
+            'Rahu': swe.MEAN_NODE  # North Node
+        }
+        
+        for planet, swe_constant in planet_map.items():
+            position = swe.calc_ut(julian_day, swe_constant)[0]
+            planet_positions[planet] = position[0]
+        
+        # Calculate Ketu (South Node) as opposite to Rahu
+        planet_positions['Ketu'] = (planet_positions['Rahu'] + 180) % 360
+        
+        return planet_positions
+
+    def calculate_ascendant(self, birth_details: BirthDetails) -> float:
+        """Calculate the ascendant (Lagna) at time of birth"""
+        julian_day = swe.julday(
+            birth_details.date.year,
+            birth_details.date.month,
+            birth_details.date.day,
+            birth_details.time.hour + birth_details.time.minute/60.0
+        )
+        
+        # Calculate houses using Placidus system
+        houses = swe.houses(
+            julian_day,
+            birth_details.latitude,
+            birth_details.longitude,
+            b'P'  # Placidus house system
+        )
+        
+        return houses[0]  # First house cusp is the ascendant
+
+    def draw_kundali_chart(self, planet_positions: Dict[str, float], ascendant: float):
+        """Draw a beautiful Kundali chart using matplotlib"""
+        # Create figure with white background
+        self.current_figure, ax = plt.subplots(figsize=(12, 12), subplot_kw={'projection': 'polar'}, facecolor='white')
+        
+        # Set up the plot
+        ax.set_theta_direction(-1)  # Clockwise
+        ax.set_theta_zero_location('N')  # 0 degrees at top
+        
+        # Draw circles
+        radii = [0.3, 0.6, 1.0]
+        for r in radii:
+            circle = plt.Circle((0, 0), r, transform=ax.transData._b, fill=False, color='black')
+            ax.add_artist(circle)
+        
+        # Draw house lines
+        angles = np.linspace(0, 2*np.pi, 13)[:-1]  # 12 equal divisions
+        for angle in angles:
+            ax.plot([angle, angle], [0.3, 1], color='black', linewidth=1)
+        
+        # Add zodiac signs
+        for i, sign in enumerate(self.zodiac_signs):
+            angle = np.pi/2 - (i * np.pi/6)  # Start from top and go clockwise
+            ax.text(angle, 1.1, sign, ha='center', va='center')
+        
+        # Add planets to their positions
+        for planet, pos in planet_positions.items():
+            angle = np.pi/2 - np.radians(pos)  # Convert to radians and adjust for plot orientation
+            symbol = self.planets[planet]
+            ax.text(angle, 0.45, f"{symbol} {planet}", ha='center', va='center')
+        
+        # Add ascendant marker
+        asc_angle = np.pi/2 - np.radians(ascendant)
+        ax.plot([asc_angle, asc_angle], [0.3, 1], color='red', linewidth=2)
+        ax.text(asc_angle, 1.15, "ASC", color='red', ha='center', va='center')
+        
+        # Remove default grid and labels
+        ax.grid(False)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        
+        # Add watermark or credits
+        self.current_figure.text(0.99, 0.01, "Generated by SoulBuddy",
+                    ha='right', va='bottom', alpha=0.5, fontsize=8)
+        
+        # Adjust layout
+        plt.tight_layout()
+        return self.current_figure
+
+    def generate_kundali(self, birth_details: BirthDetails) -> Dict:
+        """Generate complete Kundali data"""
+        # Calculate planetary positions
+        print("Calculating planetary positions...")
+        planet_positions = self.calculate_planet_positions(birth_details)
+        
+        # Calculate ascendant
+        print("Calculating ascendant...")
+        ascendant = self.calculate_ascendant(birth_details)
+        
+        # Draw the chart
+        print("Drawing Kundali chart...")
+        self.draw_kundali_chart(planet_positions, ascendant)
+        
+        # Prepare response data
+        kundali_data = {
+            "birth_details": {
+                "date": birth_details.date.isoformat(),
+                "time": birth_details.time.isoformat(),
+                "location": {
+                    "city": birth_details.city,
+                    "country": birth_details.country,
+                    "latitude": birth_details.latitude,
+                    "longitude": birth_details.longitude
+                }
+            },
+            "ascendant": ascendant,
+            "planet_positions": planet_positions
+        }
+        
+        print("\nKundali generation complete!")
+        return kundali_data 
