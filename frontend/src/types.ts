@@ -1,4 +1,4 @@
-export type Page = 'home' | 'kundali' | 'recommendations' | 'blog' | 'videos' | 'chat';
+export type Page = 'home' | 'kundali' | 'chat' | 'recommendations' | 'blog' | 'videos';
 
 export interface BlogPost {
   id: string;
@@ -7,6 +7,7 @@ export interface BlogPost {
   excerpt: string;
   image: string;
   date: string;
+  content: string;
 }
 
 export interface Video {
@@ -15,4 +16,6 @@ export interface Video {
   category: 'meditation' | 'rituals' | 'astrology';
   thumbnail: string;
   duration: string;
+  url: string;
+  description: string;
 }
