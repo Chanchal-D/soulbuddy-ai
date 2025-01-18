@@ -29,15 +29,68 @@ SoulBuddy combines the timeless wisdom of astrology and numerology with modern A
 ## 🚀 Getting Started
 
 ### Prerequisites 
-Make sure you have the following installed:  
-Python 3.8+    
-Node.js 16+    
-Git  
+1. Make sure you have the following installed:  
+    - Python 3.8+    
+    * Node.js 16+    
+    + Git  
 
 ### Installation
 
-1. Clone the repository:
-   ''' git clone https://github.com/Chanchal-D/SoulBuddy.git '''
+1. Clone the repository:  
+   ```git clone https://github.com/Chanchal-D/SoulBuddy.git```  
+   ```cd SoulBuddy```
+
+2. Set up the backend:  
+```cd backend```  
+```pip install -r requirements.txt```  
+```python manage.py runserver```
+
+3. Set up the frontend:  
+   ```cd frontend ```  
+   ```npm install```  
+   ```npm start```
+
+4. Access the app at ``` https://localhost3000 ```
+
+## 🛠️ Technology Stack
+
+
+## 🌌 Contributing
+
+We welcome contributions from developers, designers, and spiritual enthusiasts!
+
+**Steps to Contribute:**
+1. Fork the repository.  
+
+2. Create a feature branch:
+```git checkout -b feature-name```
+
+3. Commit your changes: ```git commit -m "Description of changes"```  
+
+4. Push to the branch:
+```git push origin feature-name```
+
+5. Open a pull request with a detailed description.
+
+## 🧭 Roadmap  
+  - Add advanced horoscope customization.  
+  * Implement multi-language support.  
+  + Introduce subscription-based premium features.  
+  * Develop a mobile app for iOS and Android.  
+ 
+## 📞 Support  
+If you have any questions or encounter issues, feel free to reach out:
+
+Email: support@soulbuddy.com  
+GitHub Issues: Create an issue  
+
+## 💡 License  
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Let SoulBuddy guide you on your spiritual journey. ✨
+   
+
+   
      
 
 
