@@ -43,9 +43,9 @@ class HouseTheme(BaseModel):
 class TransitInfo(BaseModel):
     planet: Planet
     house: int
-    zodiac_sign: ZodiacSign
     degree: float
     is_retrograde: bool
+    zodiac_sign: ZodiacSign
 
 class BirthDetails(BaseModel):
     year: int = Field(..., description="Birth year", example=1990)
