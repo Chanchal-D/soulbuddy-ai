@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Send } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import { useUserData } from '../context/UserDataContext';
 
 interface Message {
@@ -9,6 +10,8 @@ interface Message {
   sender: 'user' | 'bot';
   timestamp: Date;
 }
+
+const MAX_THREADS = 3;  // Maximum number of conversation threads to maintain
 
 const ChatPage = () => {
   const { userData } = useUserData();
@@ -19,6 +22,12 @@ const ChatPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
+
+    // Get last 3 messages for context
+    const recentMessages = messages.slice(-MAX_THREADS * 2).map(msg => ({
+      text: msg.text,
+      sender: msg.sender
+    }));
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -39,6 +48,8 @@ const ChatPage = () => {
         },
         body: JSON.stringify({
           message: inputText,
+          conversation_history: recentMessages,  // Send recent context
+          max_length: 150,  // Request shorter responses
           birth_details: userData ? {
             year: userData.year,
             month: userData.month,
@@ -57,17 +68,36 @@ const ChatPage = () => {
       }
 
       const data = await response.json();
+      const formatMessageText = (text: string) => {
+        const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+        
+        return sentences.reduce((formatted, sentence, index) => {
+          if (index % 2 === 0) {
+            formatted += sentence.trim();
+          } else {
+            formatted += ' ' + sentence.trim() + '\n\n';
+          }
+          return formatted;
+        }, '');
+      };
+
       const botMessage: Message = {
         id: Date.now().toString(),
-        text: data.response,
+        text: formatMessageText(data.response),
         sender: 'bot',
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, botMessage]);
+      setMessages(prev => {
+        // Keep only the last 3 threads (6 messages - 3 user + 3 bot)
+        const updatedMessages = [...prev, botMessage];
+        if (updatedMessages.length > MAX_THREADS * 2) {
+          return updatedMessages.slice(-MAX_THREADS * 2);
+        }
+        return updatedMessages;
+      });
     } catch (error) {
       console.error('Error sending message:', error);
-      // Add error message to chat
       const errorMessage: Message = {
         id: Date.now().toString(),
         text: "I apologize, but I'm having trouble connecting right now. Please try again later.",
@@ -98,11 +128,11 @@ const ChatPage = () => {
         </p>
       </motion.div>
 
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-black/20 backdrop-blur-lg rounded-2xl p-4 h-[500px] flex flex-col">
-          <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-black/20 backdrop-blur-lg rounded-2xl p-6 h-[600px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 mb-4 px-2">
             {messages.length === 0 && (
-              <div className="text-center text-gray-400 mt-4">
+              <div className="text-center text-gray-400 mt-8">
                 {userData 
                   ? "Ask anything about your spiritual journey, and I'll provide guidance based on your birth chart."
                   : "Ask any spiritual question, and I'll do my best to guide you."}
@@ -113,16 +143,44 @@ const ChatPage = () => {
                 key={message.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} mb-6`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                  className={`max-w-[90%] rounded-3xl px-8 py-6 shadow-xl ${
                     message.sender === 'user'
                       ? 'bg-purple-600 text-white'
-                      : 'bg-white/10 text-gray-200'
+                      : 'bg-gradient-to-br from-gray-800/70 to-gray-900/70 text-gray-100 backdrop-blur-sm'
                   }`}
+                  style={{ lineHeight: '1.8' }}
                 >
-                  {message.text}
+                  {message.sender === 'user' ? (
+                    <p className="text-lg font-light">{message.text}</p>
+                  ) : (
+                    <ReactMarkdown 
+                      className="prose prose-invert prose-lg max-w-none"
+                      components={{
+                        p: ({node, ...props}) => <p className="text-lg font-light tracking-wide mb-4 last:mb-0" {...props} />,
+                        ul: ({node, ...props}) => <ul className="list-disc ml-6 mb-4 space-y-3 font-light" {...props} />,
+                        ol: ({node, ...props}) => <ol className="list-decimal ml-6 mb-4 space-y-3 font-light" {...props} />,
+                        li: ({node, ...props}) => <li className="mb-2 leading-relaxed" {...props} />,
+                        h1: ({node, ...props}) => <h1 className="text-2xl font-medium mb-4 text-purple-200" {...props} />,
+                        h2: ({node, ...props}) => <h2 className="text-xl font-medium mb-3 text-purple-200" {...props} />,
+                        h3: ({node, ...props}) => <h3 className="text-lg font-medium mb-2 text-purple-200" {...props} />,
+                        strong: ({node, ...props}) => <strong className="font-medium text-purple-200" {...props} />,
+                        em: ({node, ...props}) => <em className="italic text-purple-100" {...props} />,
+                        blockquote: ({node, ...props}) => (
+                          <blockquote className="border-l-2 border-purple-400/50 pl-4 my-4 italic text-gray-300/90" {...props} />
+                        ),
+                        code: ({node, inline, ...props}) => (
+                          inline 
+                            ? <code className="bg-purple-900/20 rounded px-1.5 py-0.5 font-mono text-sm" {...props} />
+                            : <code className="block bg-purple-900/20 rounded-lg p-4 font-mono text-sm my-4 overflow-x-auto" {...props} />
+                        ),
+                      }}
+                    >
+                      {message.text}
+                    </ReactMarkdown>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -139,20 +197,20 @@ const ChatPage = () => {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="flex space-x-2">
+          <form onSubmit={handleSubmit} className="flex space-x-3 px-2">
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder={userData ? "Ask about your spiritual journey..." : "Ask for spiritual guidance..."}
-              className="flex-1 input bg-black/50"
+              className="flex-1 input bg-black/50 h-12 text-lg"
             />
             <button
               type="submit"
               disabled={isLoading}
-              className="btn btn-primary px-4"
+              className="btn btn-primary px-6 h-12"
             >
-              <Send className="h-5 w-5" />
+              <Send className="h-6 w-6" />
             </button>
           </form>
         </div>

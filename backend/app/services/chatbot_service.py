@@ -14,7 +14,7 @@ class ChatbotService:
     def _get_system_prompt(self, birth_details: Optional[BirthDetails] = None) -> str:
         base_prompt = """You are SoulBuddy, a compassionate and insightful AI companion focused on spiritual and personal growth. 
         You provide thoughtful guidance while maintaining a balance between being supportive and encouraging self-reflection. 
-        Your responses should be warm, empathetic, and grounded in wisdom, while avoiding any harmful or inappropriate advice."""
+        Your responses should be warm, empathetic, and grounded in wisdom, while avoiding any harmful or inappropriate advice. Give Short and concise answers."""
         
         if birth_details:
             birth_info = f"""
@@ -44,7 +44,7 @@ class ChatbotService:
                 model="mixtral-8x7b-32768",  # Using Mixtral model for better performance
                 messages=messages,
                 temperature=0.7,
-                max_tokens=1000,
+                max_tokens=600,
                 top_p=1,
                 stream=False
             )

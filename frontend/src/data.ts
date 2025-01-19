@@ -237,6 +237,96 @@ export const blogPosts: BlogPost[] = [
       - Personal growth opportunities
       - Spiritual insights
     `
+  },
+  {
+    id: '6',
+    title: 'Understanding Planetary Aspects and Transits',
+    category: 'astrology',
+    excerpt: 'Learn how planetary aspects and transits influence your daily life, career, and personal growth.',
+    image: 'https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+    date: '2024-02-01',
+    content: `
+      Planetary aspects and transits are key components in understanding how celestial movements affect our daily lives. Let's explore how these cosmic relationships work and what they mean for you.
+
+      Understanding Aspects:
+      Aspects are specific angles between planets that create different types of energy and influence:
+      - Conjunction (0°): Planets are in the same position, creating intense focus and blending of energies
+      - Square (90°): Creates tension and challenges that lead to growth
+      - Trine (120°): Harmonious flow of energy, bringing ease and opportunity
+      - Opposition (180°): Creates awareness through polarity and balance
+      - Sextile (60°): Opportunities for growth through positive interaction
+
+      Example Interpretations:
+      1. Sun Square Natal Sun (10th House)
+      - When the transiting Sun forms a square to your natal Sun in the 10th house
+      - Creates tension between your core identity and career/public image
+      - Challenges may arise in professional settings
+      - Opportunity for growth through overcoming obstacles
+      - Best used for reassessing career goals and public presence
+
+      2. Moon Conjunct Ketu (6th House)
+      - Transiting Moon aligning with natal Ketu in the 6th house
+      - Heightened intuition regarding health and daily routines
+      - May bring subconscious patterns to light
+      - Good time for spiritual practices and healing
+      - Focus on releasing unhealthy habits
+
+      3. Mars Sextile Natal Planets
+      - Creates opportunities for action and initiative
+      - Energy flows more easily in the affected areas of life
+      - Good time for starting new projects
+      - Enhanced confidence and motivation
+      - Physical energy is heightened
+
+      How Transits Work:
+      - Transits are the ongoing movements of planets in relation to your birth chart
+      - They activate different areas of your chart as they move
+      - Each planet's transit has a different duration and impact
+      - Fast-moving planets (Moon, Mercury, Venus) create short-term effects
+      - Slow-moving planets (Jupiter, Saturn) create longer-lasting influences
+
+      Practical Applications:
+      1. Career Decisions
+      - Watch for transits to your 10th house and its ruler
+      - Pay attention to aspects to your natal Sun and Saturn
+      - Use challenging aspects as growth opportunities
+      - Harmonious aspects indicate good times for advancement
+
+      2. Health and Wellness
+      - Monitor 6th house transits for health insights
+      - Moon transits affect emotional well-being
+      - Mars transits influence energy levels
+      - Saturn transits may indicate areas needing attention
+
+      3. Relationships
+      - Venus and Mars transits affect romantic life
+      - 7th house transits influence partnerships
+      - Moon transits affect emotional connections
+      - Jupiter transits can bring relationship opportunities
+
+      Working with Transits:
+      1. Track Daily Transits
+      - Use an ephemeris or astrology app
+      - Note which houses are being activated
+      - Observe the aspects being formed
+      - Journal your experiences
+
+      2. Plan According to Transits
+      - Choose favorable times for important activities
+      - Be prepared for challenging periods
+      - Use difficult aspects for growth
+      - Leverage harmonious aspects for advancement
+
+      3. Integration Practices
+      - Meditation during significant transits
+      - Ritual work aligned with planetary energies
+      - Journaling insights and patterns
+      - Adjusting activities to cosmic rhythms
+
+      Remember that transits and aspects are tools for growth and self-awareness. While challenging aspects may bring difficulties, they also present opportunities for development. Harmonious aspects offer periods of ease and flow, but shouldn't be taken for granted.
+
+      By understanding these celestial patterns, you can better navigate life's ups and downs, making conscious choices that align with cosmic energies for optimal growth and success.
+    `
   }
 ];
 
