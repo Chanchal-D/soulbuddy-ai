@@ -5,12 +5,19 @@ from typing import Dict, List, Tuple
 import math
 from datetime import datetime, timezone
 from app.models.schemas import BirthDetails
+import groq
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 class KundaliGenerator:
     def __init__(self):
-        # Initialize Swiss Ephemeris
+        # Initialize Swiss Ephemeris and Groq client
         swe.set_ephe_path()
         self.current_figure = None
+        self.groq_client = groq.Groq(api_key=os.getenv("GROQ_API_KEY"))
         
         # Define planets and their symbols
         self.planets = {
@@ -68,8 +75,8 @@ class KundaliGenerator:
         
         return planet_positions
 
-    def calculate_ascendant(self, birth_details: BirthDetails) -> float:
-        """Calculate the ascendant (Lagna) at time of birth"""
+    def calculate_ascendant(self, birth_details: BirthDetails) -> Tuple[float, List[float]]:
+        """Calculate the ascendant (Lagna) and house cusps at time of birth"""
         julian_day = swe.julday(
             birth_details.date.year,
             birth_details.date.month,
@@ -85,7 +92,11 @@ class KundaliGenerator:
             b'P'  # Placidus house system
         )
         
-        return houses[0]  # First house cusp is the ascendant
+        # Extract the ascendant and house cusps
+        ascendant = houses[1][0]  # First house cusp (ascendant)
+        house_cusps = list(houses[0])  # All house cusps
+        
+        return ascendant, house_cusps
 
     def draw_kundali_chart(self, planet_positions: Dict[str, float], ascendant: float):
         """Draw a beautiful Kundali chart using matplotlib"""
@@ -136,15 +147,96 @@ class KundaliGenerator:
         plt.tight_layout()
         return self.current_figure
 
+    def generate_house_insights(self, house_cusps: List[float], ascendant: float) -> Dict[str, str]:
+        """Generate insights about house placements and ascendant using Groq LLM"""
+        # Prepare the house and ascendant information
+        house_info = {
+            f"House {i+1}": f"{house_cusps[i]:.2f}°"
+            for i in range(12)
+        }
+        ascendant_info = f"{ascendant:.2f}°"
+        
+        # Create prompt for the LLM
+        prompt = f"""As a Vedic astrology expert, analyze the following house cusps and ascendant positions:
+
+Ascendant: {ascendant_info}
+
+House Positions:
+{chr(10).join([f'{k}: {v}' for k, v in house_info.items()])}
+
+Based on these positions, provide 5 key insights about:
+1. The person's life path and personality (based on Ascendant)
+2. Career and public standing (10th house)
+3. Relationships and partnerships (7th house)
+4. Wealth and possessions (2nd house)
+5. Home and emotional well-being (4th house)
+
+Format each insight on a new line starting with the number (1., 2., etc.) followed by your insight. """
+
+        # Generate insights using Groq
+        try:
+            completion = self.groq_client.chat.completions.create(
+                messages=[{
+                    "role": "user",
+                    "content": prompt
+                }],
+                model="mixtral-8x7b-32768",
+                temperature=0.7,
+                max_tokens=1000
+            )
+            
+            # Extract and process insights
+            content = completion.choices[0].message.content
+            
+            # Split insights into a dictionary
+            import re
+            insights_dict = {}
+            
+            # Split content into lines and process each line
+            lines = content.split('\n')
+            current_number = None
+            current_text = []
+            
+            for line in lines:
+                # Check if line starts with a number
+                number_match = re.match(r'(\d+)\.', line)
+                if number_match:
+                    # If we have previous content, save it
+                    if current_number is not None:
+                        insights_dict[str(current_number)] = ' '.join(current_text).strip()
+                        current_text = []
+                    
+                    # Start new number
+                    current_number = int(number_match.group(1))
+                    # Add text after the number
+                    current_text.append(re.sub(r'^\d+\.', '', line).strip())
+                elif line.strip() and current_number is not None:
+                    # Continue previous insight
+                    current_text.append(line.strip())
+            
+            # Add the last insight
+            if current_number is not None and current_text:
+                insights_dict[str(current_number)] = ' '.join(current_text).strip()
+            
+            return insights_dict
+            
+        except Exception as e:
+            print(f"Error generating insights: {str(e)}")
+            return {"error": "Unable to generate insights. Please check your Groq API key and try again."}
+
     def generate_kundali(self, birth_details: BirthDetails) -> Dict:
         """Generate complete Kundali data"""
         # Calculate planetary positions
         print("Calculating planetary positions...")
         planet_positions = self.calculate_planet_positions(birth_details)
         
-        # Calculate ascendant
-        print("Calculating ascendant...")
-        ascendant = self.calculate_ascendant(birth_details)
+        # Calculate ascendant and houses
+        print("Calculating ascendant and houses...")
+        ascendant, house_cusps = self.calculate_ascendant(birth_details)
+        
+        # Generate insights using Groq
+        print("Generating astrological insights...")
+        insights = self.generate_house_insights(house_cusps, ascendant)
         
         # Draw the chart
         print("Drawing Kundali chart...")
@@ -163,7 +255,9 @@ class KundaliGenerator:
                 }
             },
             "ascendant": ascendant,
-            "planet_positions": planet_positions
+            "house_cusps": house_cusps,
+            "planet_positions": planet_positions,
+            "insights": insights
         }
         
         print("\nKundali generation complete!")

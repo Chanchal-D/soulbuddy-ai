@@ -56,16 +56,18 @@ class BirthDetails(BaseModel):
     city: str = Field(..., description="Birth place city", example="Mumbai")
     country: str = Field(..., description="Birth place country", example="India")
     gender: str = Field(..., description="Gender", example="male")
+    
+    @property
+    def birth_date(self) -> datetime:
+        return datetime(self.year, self.month, self.day, self.hour, self.minute)
 
 class HoroscopeRequest(BaseModel):
-    zodiac_sign: ZodiacSign
     time_frame: TimeFrame
     birth_details: Optional[BirthDetails] = None
 
     class Config:
         json_schema_extra = {
             "example": {
-                "zodiac_sign": "aries",
                 "time_frame": "daily",
                 "birth_details": {
                     "year": 1990,
@@ -96,10 +98,4 @@ class HoroscopePrediction(BaseModel):
     lucky_color: str
     transits: List[TransitInfo]
     natal_chart: Optional[NatalChart] = None  # Include natal chart if birth details provided
-    timestamp: datetime
-
-    # Remove this duplicate class
-    # class HoroscopeRequest(BaseModel):
-    #     zodiac_sign: ZodiacSign
-    #     time_frame: TimeFrame
-    #     birth_date: Optional[datetime] = None 
+    timestamp: datetime 
