@@ -1,4 +1,4 @@
-export type Page = 'home' | 'kundali' | 'chat' | 'recommendations' | 'blog' | 'videos';
+export type Page = 'home' | 'kundali' | 'horoscope' | 'chat' | 'recommendations' | 'blog' | 'videos';
 
 export interface BlogPost {
   id: string;

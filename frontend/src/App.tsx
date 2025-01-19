@@ -23,8 +23,43 @@ import BlogPage from './components/BlogPage';
 import VideoPage from './components/VideoPage';
 import ChatPage from './components/ChatPage';
 import RecommendationPage from './components/RecommendationPage';
+import HoroscopePage from './components/HoroscopePage';
+import KundaliChart from './components/KundaliChart';
 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
+async function generateHoroscope(data: any) {
+  const response = await fetch(`${API_BASE_URL}/api/horoscope/predict`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!response.ok) throw new Error('Failed to generate horoscope');
+  return response.json();
+}
+
+async function getDailyHoroscope(zodiacSign: string) {
+  const response = await fetch(`${API_BASE_URL}/api/horoscope/signs/${zodiacSign}/daily`, {
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
+  });
+  if (!response.ok) throw new Error('Failed to get daily horoscope');
+  return response.json();
+}
+
+async function getCurrentTransits() {
+  const response = await fetch(`${API_BASE_URL}/api/horoscope/transits/current`, {
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
+  });
+  if (!response.ok) throw new Error('Failed to get current transits');
+  return response.json();
+}
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -32,13 +67,41 @@ function App() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [kundaliResult, setKundaliResult] = useState<{
-    chart_base64: string;
+    chart_base64?: string;
     analysis_text: string;
+    kundali_data?: {
+      birth_details: {
+        date: string;
+        time: string;
+        location: {
+          city: string;
+          country: string;
+          latitude: number;
+          longitude: number;
+        };
+      };
+      ascendant: number;
+      planet_positions: {
+        Sun: number;
+        Moon: number;
+        Mars: number;
+        Mercury: number;
+        Jupiter: number;
+        Venus: number;
+        Saturn: number;
+        Rahu: number;
+        Ketu: number;
+      };
+      house_cusps: number[];
+      insights: string[];
+    };
   } | null>(null);
+  const [horoscopeResult, setHoroscopeResult] = useState<any>(null);
 
   const navigation = [
     { name: 'home' as Page, icon: <Star className="h-5 w-5" /> },
     { name: 'kundali' as Page, icon: <Moon className="h-5 w-5" /> },
+    { name: 'horoscope' as Page, icon: <Sun className="h-5 w-5" /> },
     { name: 'chat' as Page, icon: <MessageCircle className="h-5 w-5" /> },
     { name: 'recommendations' as Page, icon: <Gem className="h-5 w-5" /> },
     { name: 'blog' as Page, icon: <Newspaper className="h-5 w-5" /> },
@@ -48,22 +111,96 @@ function App() {
   const handleKundaliSubmit = async (formData: any) => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/kundali/generate', {
+      
+      // First, make the kundali request
+      const kundaliResponse = await fetch(`${API_BASE_URL}/api/kundali/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          year: Number(formData.year),
+          month: Number(formData.month),
+          day: Number(formData.day),
+          hour: Number(formData.hour),
+          minute: Number(formData.minute),
+          city: formData.city,
+          country: "India",
+          gender: formData.gender
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate kundali');
+      if (!kundaliResponse.ok) {
+        const errorData = await kundaliResponse.json();
+        throw new Error(errorData.detail || 'Failed to generate kundali');
       }
 
-      const data = await response.json();
-      setKundaliResult(data);
+      const kundaliData = await kundaliResponse.json();
+      console.log('Received kundali data:', kundaliData);
+
+      // Structure the insights data
+      const insights = [
+        "Life Path and Personality",
+        `Based on your Ascendant at ${kundaliData.kundali_data.ascendant.toFixed(2)}°, you possess qualities of leadership and independence. Your rising sign shapes your approach to life and personal expression.`,
+        
+        "Career and Public Standing",
+        `Your 10th house placement indicates professional opportunities and potential career paths. This suggests a strong inclination towards ${kundaliData.analysis_text.includes('leadership') ? 'leadership roles' : 'creative pursuits'}.`,
+        
+        "Relationships and Partnerships",
+        `The planetary positions in your 7th house reveal your approach to relationships and partnerships. ${kundaliData.analysis_text.includes('harmony') ? 'You seek harmony and balance in relationships.' : 'You value independence in partnerships.'}`,
+        
+        "Spiritual Growth",
+        `Your chart's spiritual houses indicate ${kundaliData.analysis_text.includes('spiritual') ? 'a deep connection to spiritual matters' : 'an analytical approach to personal growth'}.`,
+        
+        "Health and Vitality",
+        `The positions of Sun and Moon in your chart suggest ${kundaliData.analysis_text.includes('energy') ? 'high energy levels' : 'a need for balanced rest and activity'}.`,
+        
+        "Wealth and Resources",
+        `Your 2nd and 8th house placements indicate ${kundaliData.analysis_text.includes('prosperity') ? 'potential for financial growth' : 'a practical approach to finances'}.`
+      ];
+
+      setKundaliResult({
+        kundali_data: {
+          ...kundaliData.kundali_data,
+          insights: insights
+        },
+        analysis_text: kundaliData.analysis_text
+      });
+
+      // Now, make the horoscope request
+      const horoscopeResponse = await fetch(`${API_BASE_URL}/api/horoscope/predict`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          birth_details: {
+            year: Number(formData.year),
+            month: Number(formData.month),
+            day: Number(formData.day),
+            hour: Number(formData.hour),
+            minute: Number(formData.minute),
+            city: formData.city,
+            country: "India",
+            gender: formData.gender.toLowerCase()
+          },
+          time_frame: "daily"
+        }),
+      });
+
+      if (!horoscopeResponse.ok) {
+        const errorData = await horoscopeResponse.json();
+        console.error('Horoscope error:', errorData);
+        throw new Error(errorData.detail || 'Failed to generate horoscope');
+      }
+
+      const horoscopeData = await horoscopeResponse.json();
+      console.log('Received horoscope data:', horoscopeData);
+      setHoroscopeResult(horoscopeData);
+
     } catch (error) {
-      console.error('Error generating kundali:', error);
+      console.error('Error:', error);
+      alert('Failed to generate kundali. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -392,28 +529,80 @@ function App() {
               <KundaliForm onSubmit={handleKundaliSubmit} isLoading={isLoading} />
             ) : (
               <div className="space-y-8">
+                {/* Kundali Chart Section */}
                 <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 shadow-xl">
-                  <img 
-                    src={`data:image/png;base64,${kundaliResult.chart_base64}`}
-                    alt="Your Kundali Chart"
-                    className="w-full max-w-2xl mx-auto rounded-lg"
-                  />
-                </div>
-                
-                <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 shadow-xl">
-                  <h2 className="text-2xl font-bold text-white mb-4 font-playfair">
-                    Your Astrological Analysis
-                  </h2>
-                  <div className="prose prose-invert max-w-none">
-                    <pre className="whitespace-pre-wrap text-gray-300 font-poppins">
-                      {kundaliResult.analysis_text}
-                    </pre>
-                  </div>
+                  {kundaliResult.kundali_data ? (
+                    <KundaliChart data={kundaliResult.kundali_data} />
+                  ) : (
+                    <div className="text-center text-gray-300">Chart data not available</div>
+                  )}
                 </div>
 
+                {/* Horoscope Section */}
+                {horoscopeResult && (
+                  <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 shadow-xl">
+                    <h2 className="text-2xl font-extrabold text-white mb-8 font-playfair text-center">
+                      Your Personalized Horoscope Reading
+                    </h2>
+                    
+                    {/* General Insights - Full Width */}
+                    <div className="mb-6">
+                      <div className="bg-purple-900/20 backdrop-blur-lg rounded-xl p-8 transform transition-all duration-300 hover:scale-[1.02] hover:bg-purple-900/30 border border-purple-500/20">
+                        <h3 className="text-2xl font-extrabold text-white mb-4 font-playfair text-center">General Insights</h3>
+                        <p className="text-gray-300 leading-relaxed text-lg text-center max-w-3xl mx-auto">{horoscopeResult.general}</p>
+                      </div>
+                    </div>
+
+                    {/* Other Predictions - 3 Column Grid */}
+                    <div className="grid grid-cols-3 gap-6">
+                      {/* Career */}
+                      <div className="bg-purple-900/20 backdrop-blur-lg rounded-xl p-6 transform transition-all duration-300 hover:scale-[1.02] hover:bg-purple-900/30 border border-purple-500/20">
+                        <h3 className="text-xl font-extrabold text-white mb-4 font-playfair">Career Path</h3>
+                        <p className="text-gray-300 leading-relaxed">{horoscopeResult.career}</p>
+                      </div>
+
+                      {/* Love & Relationships */}
+                      <div className="bg-purple-900/20 backdrop-blur-lg rounded-xl p-6 transform transition-all duration-300 hover:scale-[1.02] hover:bg-purple-900/30 border border-purple-500/20">
+                        <h3 className="text-xl font-extrabold text-white mb-4 font-playfair">Love & Relationships</h3>
+                        <p className="text-gray-300 leading-relaxed">{horoscopeResult.love}</p>
+                      </div>
+
+                      {/* Health */}
+                      <div className="bg-purple-900/20 backdrop-blur-lg rounded-xl p-6 transform transition-all duration-300 hover:scale-[1.02] hover:bg-purple-900/30 border border-purple-500/20">
+                        <h3 className="text-xl font-extrabold text-white mb-4 font-playfair">Health & Wellness</h3>
+                        <p className="text-gray-300 leading-relaxed">{horoscopeResult.health}</p>
+                      </div>
+
+                      {/* Finances */}
+                      <div className="bg-purple-900/20 backdrop-blur-lg rounded-xl p-6 transform transition-all duration-300 hover:scale-[1.02] hover:bg-purple-900/30 border border-purple-500/20">
+                        <h3 className="text-xl font-extrabold text-white mb-4 font-playfair">Financial Outlook</h3>
+                        <p className="text-gray-300 leading-relaxed">{horoscopeResult.finances}</p>
+                      </div>
+
+                      {/* Lucky Elements */}
+                      <div className="bg-purple-900/20 backdrop-blur-lg rounded-xl p-6 transform transition-all duration-300 hover:scale-[1.02] hover:bg-purple-900/30 border border-purple-500/20">
+                        <h3 className="text-xl font-extrabold text-white mb-4 font-playfair">Lucky Elements</h3>
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-lg font-bold text-purple-300">Lucky Number</h4>
+                            <p className="text-gray-300">{horoscopeResult.lucky_number}</p>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-bold text-purple-300">Lucky Color</h4>
+                            <p className="text-gray-300">{horoscopeResult.lucky_color}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <button
-                  onClick={() => setKundaliResult(null)}
-                  className="btn btn-primary"
+                  onClick={() => {
+                    setKundaliResult(null);
+                    setHoroscopeResult(null);
+                  }}
+                  className="btn btn-primary mx-auto block"
                 >
                   Generate Another Chart
                 </button>
@@ -422,8 +611,58 @@ function App() {
           </div>
         )}
 
-        {currentPage === 'chat' && <ChatPage />}
-        {currentPage === 'recommendations' && <RecommendationPage />}
+        {currentPage === 'horoscope' && (
+          <HoroscopePage 
+            generateHoroscope={generateHoroscope}
+            getDailyHoroscope={getDailyHoroscope}
+            getCurrentTransits={getCurrentTransits}
+          />
+        )}
+
+        {currentPage === 'chat' && (
+          <div className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
+            {!kundaliResult ? (
+              <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6 font-playfair">
+                  Start Your Spiritual Conversation
+                </h1>
+                <p className="text-xl text-gray-300 mb-8 font-poppins">
+                  To begin your personalized chat experience with our AI spiritual guide, please fill out your birth details first.
+                </p>
+                <button 
+                  onClick={() => setCurrentPage('kundali')}
+                  className="btn btn-primary transform transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:shadow-purple-500/30"
+                >
+                  Fill Birth Details <ArrowRight className="ml-2 h-5 w-5 inline-block" />
+                </button>
+              </div>
+            ) : (
+              <ChatPage />
+            )}
+          </div>
+        )}
+        {currentPage === 'recommendations' && (
+          <div className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
+            {!kundaliResult ? (
+              <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6 font-playfair">
+                  Get Your Personalized Recommendations
+                </h1>
+                <p className="text-xl text-gray-300 mb-8 font-poppins">
+                  To receive personalized spiritual recommendations, please fill out your birth details first.
+                </p>
+                <button 
+                  onClick={() => setCurrentPage('kundali')}
+                  className="btn btn-primary transform transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:shadow-purple-500/30"
+                >
+                  Fill Birth Details <ArrowRight className="ml-2 h-5 w-5 inline-block" />
+                </button>
+              </div>
+            ) : (
+              <RecommendationPage />
+            )}
+          </div>
+        )}
         {currentPage === 'blog' && <BlogPage />}
         {currentPage === 'videos' && <VideoPage />}
       </main>
