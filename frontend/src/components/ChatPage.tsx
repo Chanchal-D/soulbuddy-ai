@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Send } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useUserData } from '../context/UserDataContext';
 
 interface Message {
   id: string;
@@ -10,6 +11,7 @@ interface Message {
 }
 
 const ChatPage = () => {
+  const { userData } = useUserData();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -30,12 +32,24 @@ const ChatPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: inputText }),
+        body: JSON.stringify({
+          message: inputText,
+          birth_details: userData ? {
+            year: userData.year,
+            month: userData.month,
+            day: userData.day,
+            hour: userData.hour,
+            minute: userData.minute,
+            city: userData.city,
+            country: userData.country,
+            gender: userData.gender
+          } : null
+        }),
       });
 
       if (!response.ok) {
@@ -53,6 +67,14 @@ const ChatPage = () => {
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
+      // Add error message to chat
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: "I apologize, but I'm having trouble connecting right now. Please try again later.",
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -67,16 +89,25 @@ const ChatPage = () => {
         transition={{ duration: 0.5 }}
       >
         <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6 font-playfair">
-          Spiritual Guidance Chat
+          {userData ? 'Your Personal Spiritual Guide' : 'Spiritual Guidance Chat'}
         </h1>
         <p className="text-xl text-gray-300 font-poppins">
-          Connect with our AI spiritual guide for personalized insights and wisdom.
+          {userData 
+            ? 'Get personalized spiritual guidance based on your birth chart and energy.'
+            : 'Fill out your birth details to receive more personalized spiritual guidance.'}
         </p>
       </motion.div>
 
       <div className="max-w-2xl mx-auto">
         <div className="bg-black/20 backdrop-blur-lg rounded-2xl p-4 h-[500px] flex flex-col">
           <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+            {messages.length === 0 && (
+              <div className="text-center text-gray-400 mt-4">
+                {userData 
+                  ? "Ask anything about your spiritual journey, and I'll provide guidance based on your birth chart."
+                  : "Ask any spiritual question, and I'll do my best to guide you."}
+              </div>
+            )}
             {messages.map((message) => (
               <motion.div
                 key={message.id}
@@ -113,7 +144,7 @@ const ChatPage = () => {
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Ask for spiritual guidance..."
+              placeholder={userData ? "Ask about your spiritual journey..." : "Ask for spiritual guidance..."}
               className="flex-1 input bg-black/50"
             />
             <button

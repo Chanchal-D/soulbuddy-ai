@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useUserData } from '../context/UserDataContext';
 
 interface KundaliFormProps {
   onSubmit: (data: any) => void;
@@ -7,6 +8,7 @@ interface KundaliFormProps {
 }
 
 const KundaliForm: React.FC<KundaliFormProps> = ({ onSubmit, isLoading }) => {
+  const { setUserData } = useUserData();
   const [formData, setFormData] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
@@ -20,6 +22,7 @@ const KundaliForm: React.FC<KundaliFormProps> = ({ onSubmit, isLoading }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setUserData(formData);
     onSubmit(formData);
   };
 
