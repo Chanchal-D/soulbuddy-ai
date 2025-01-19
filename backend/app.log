@@ -9696,3 +9696,6 @@ AttributeError: 'TransitInfo' object has no attribute 'zodiac_sign'
 2025-01-19 13:25:45,063 - asyncio - DEBUG - Using proactor: IocpProactor
 2025-01-19 13:25:53,321 - app.services.subscription_service - INFO - Welcome email sent successfully to chanchalkuntal398@gmail.com
 2025-01-19 13:27:46,982 - app.services.subscription_service - INFO - Welcome email sent successfully to guptaharsh0216@gmail.com
+2025-01-19 13:41:15,448 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-01-19 13:43:04,949 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-01-19 13:43:30,899 - app.services.subscription_service - INFO - Welcome email sent successfully to chanchalkuntal398@gmail.com
