@@ -66,6 +66,8 @@ function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [email, setEmail] = useState('');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [subscriptionMessage, setSubscriptionMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [kundaliResult, setKundaliResult] = useState<{
     chart_base64?: string;
@@ -204,6 +206,34 @@ function App() {
       alert('Failed to generate kundali. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubscriptionStatus('loading');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/subscription/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Subscription failed');
+      }
+
+      setSubscriptionStatus('success');
+      setSubscriptionMessage(data.message);
+      setEmail('');
+    } catch (error) {
+      setSubscriptionStatus('error');
+      setSubscriptionMessage(error instanceof Error ? error.message : 'Failed to subscribe');
     }
   };
 
@@ -488,10 +518,7 @@ function App() {
                         Subscribe to receive celestial insights and spiritual guidance directly in your inbox
                       </p>
                       <form 
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          // Handle newsletter subscription
-                        }}
+                        onSubmit={handleSubscribe}
                         className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto"
                       >
                         <input
@@ -504,12 +531,26 @@ function App() {
                         />
                         <button
                           type="submit"
-                          className="px-8 py-4 bg-[#8b5cf6] rounded-xl text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#7c3aed] transition-all duration-300"
+                          disabled={subscriptionStatus === 'loading'}
+                          className="px-8 py-4 bg-[#8b5cf6] rounded-xl text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#7c3aed] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <Mail className="h-5 w-5" />
-                          Subscribe
+                          {subscriptionStatus === 'loading' ? (
+                            <span className="animate-pulse">Subscribing...</span>
+                          ) : (
+                            <>
+                              <Mail className="h-5 w-5" />
+                              Subscribe
+                            </>
+                          )}
                         </button>
                       </form>
+                      {subscriptionMessage && (
+                        <p className={`mt-4 text-center ${
+                          subscriptionStatus === 'success' ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {subscriptionMessage}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

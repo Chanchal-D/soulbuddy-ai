@@ -9681,3 +9681,18 @@ AttributeError: 'TransitInfo' object has no attribute 'zodiac_sign'
 2025-01-19 09:42:14,654 - groq._base_client - DEBUG - HTTP Response: POST https://api.groq.com/openai/v1/chat/completions "200 OK" Headers({'date': 'Sun, 19 Jan 2025 04:12:14 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'cf-ray': '9043fc38bf413053-BOM', 'cf-cache-status': 'DYNAMIC', 'cache-control': 'private, max-age=0, no-store, no-cache, must-revalidate', 'vary': 'Origin, Accept-Encoding', 'via': '1.1 google', 'alt-svc': 'h3=":443"; ma=86400', 'x-groq-region': 'us-west-1', 'x-ratelimit-limit-requests': '14400', 'x-ratelimit-limit-tokens': '5000', 'x-ratelimit-remaining-requests': '14399', 'x-ratelimit-remaining-tokens': '4840', 'x-ratelimit-reset-requests': '6s', 'x-ratelimit-reset-tokens': '1.92s', 'x-request-id': 'req_01jhyc5r05e0grdfeyfme1qavb', 'set-cookie': '__cf_bm=4BW29Uqfuzemtly7KpcB_7bGdRWzgCHPJaKidy2laUI-1737259934-1.0.1.1-5z296z5aoQWPzdxjsASBNc6iwjpR4TYLwoH9gjYGGnHnMucExLjh_o32ldDWmY4eBlnzSRSdwaBZ.ZTr1GR2hw; path=/; expires=Sun, 19-Jan-25 04:42:14 GMT; domain=.groq.com; HttpOnly; Secure; SameSite=None', 'server': 'cloudflare', 'content-encoding': 'gzip'})
 2025-01-19 09:42:52,402 - httpcore.connection - DEBUG - close.started
 2025-01-19 09:42:52,402 - httpcore.connection - DEBUG - close.complete
+2025-01-19 13:10:38,114 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-01-19 13:19:58,177 - app.services.subscription_service - ERROR - SMTP credentials not configured
+2025-01-19 13:19:58,193 - app.api.endpoints.subscription - ERROR - Subscription error: 500: Email service not configured
+2025-01-19 13:22:04,403 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-01-19 13:22:11,148 - app.services.subscription_service - ERROR - Email service configuration is incomplete. Please check SMTP settings.
+2025-01-19 13:22:11,148 - app.api.endpoints.subscription - ERROR - Subscription error: Email service configuration is incomplete. Please check SMTP settings.
+2025-01-19 13:23:25,369 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-01-19 13:23:31,073 - app.services.subscription_service - ERROR - Email service configuration is incomplete. Please check SMTP settings.
+2025-01-19 13:23:31,073 - app.api.endpoints.subscription - ERROR - Subscription error: Email service configuration is incomplete. Please check SMTP settings.
+2025-01-19 13:24:22,876 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-01-19 13:24:30,746 - app.services.subscription_service - INFO - Welcome email sent successfully to chanchalkuntal398@gmail.com
+2025-01-19 13:25:41,437 - app.services.subscription_service - INFO - Welcome email sent successfully to chanchalkuntal398@gmail.com
+2025-01-19 13:25:45,063 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-01-19 13:25:53,321 - app.services.subscription_service - INFO - Welcome email sent successfully to chanchalkuntal398@gmail.com
+2025-01-19 13:27:46,982 - app.services.subscription_service - INFO - Welcome email sent successfully to guptaharsh0216@gmail.com
